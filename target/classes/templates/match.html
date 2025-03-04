@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Matcher - Choose Your Favorite</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #141414;
+            color: #ffffff;
+        }
+        
+        h1, h2, h3 {
+            color: #ffffff;
+        }
+        
+        a {
+            color: #0071eb;
+            text-decoration: none;
+        }
+        
+        a:hover {
+            text-decoration: underline;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .vs-container {
+            text-align: center;
+            margin: 20px 0;
+            font-size: 2em;
+            font-weight: bold;
+            color: #e50914;
+            background-color: #3b82f6;
+            width: 70px;
+            height: 70px;
+            line-height: 70px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+        }
+        
+        .movie-comparison {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+        }
+        
+        .movie-card {
+            background-color: #222;
+            border-radius: 5px;
+            overflow: hidden;
+            width: 100%;
+            max-width: 400px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .movie-image-container {
+            width: 100%;
+            padding-bottom: 150%; /* 2:3 aspect ratio for movie posters */
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .movie-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain; /* Changed to contain to show the full image */
+            background-color: #111; /* Dark background for letterboxing */
+        }
+        
+        .movie-info {
+            padding: 20px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .movie-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 1.5em;
+        }
+        
+        .movie-details {
+            margin-bottom: 15px;
+            flex-grow: 1;
+        }
+        
+        .movie-genre {
+            color: #aaa;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+        }
+        
+        .movie-description {
+            font-size: 0.9em;
+            margin-bottom: 20px;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .choose-button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background-color: #e50914;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            text-align: center;
+        }
+        
+        .choose-button:hover {
+            background-color: #b81d24;
+            text-decoration: none;
+        }
+        
+        .skip-button {
+            display: block;
+            width: 200px;
+            padding: 10px;
+            background-color: #333;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            text-align: center;
+            margin: 20px auto;
+        }
+        
+        .skip-button:hover {
+            background-color: #555;
+            text-decoration: none;
+        }
+        
+        .progress-container {
+            background-color: #333;
+            border-radius: 5px;
+            margin: 20px 0;
+            height: 10px;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background-color: #e50914;
+            border-radius: 5px;
+        }
+        
+        .round-info {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #aaa;
+        }
+        
+        .cancel-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        footer {
+            margin-top: 50px;
+            text-align: center;
+            color: #aaa;
+            font-size: 0.9em;
+            padding: 20px;
+            border-top: 1px solid #333;
+        }
+        
+        @media (max-width: 768px) {
+            .movie-comparison {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .vs-container {
+                margin: 10px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Movie Matcher</h1>
+        
+        <div class="progress-container">
+            <div class="progress-bar" th:style="'width:' + ${(round + 1) * 10} + '%'"></div>
+        </div>
+        
+        <div class="round-info">
+            Round <span th:text="${round + 1}">1</span>/10 · Platform: <span th:text="${platform}">All</span>
+        </div>
+        
+        <h2>Which would you rather watch?</h2>
+        
+        <div class="movie-comparison">
+            <!-- Left Movie -->
+            <div class="movie-card">
+                <div class="movie-image-container">
+                    <img th:src="${leftMovie.imageUrl}" class="movie-image" th:alt="${leftMovie.title}">
+                </div>
+                <div class="movie-info">
+                    <div class="movie-title" th:text="${leftMovie.title}">Movie Title</div>
+                    <div class="movie-details">
+                        <div class="movie-genre">
+                            <span th:text="${leftMovie.genre}">Genre</span> · 
+                            <span th:text="${leftMovie.rating} + '/10'">Rating</span>
+                        </div>
+                        <div class="movie-description" th:text="${leftMovie.description}">Description goes here...</div>
+                    </div>
+                    <form action="/choose" method="post">
+                        <input type="hidden" name="chosenId" th:value="${leftMovie.id}">
+                        <input type="hidden" name="platform" th:value="${platform}">
+                        <input type="hidden" name="round" th:value="${round}">
+                        <button type="submit" class="choose-button">Choose This</button>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- VS Divider (for larger screens) -->
+            <div class="vs-container">VS</div>
+            
+            <!-- Right Movie -->
+            <div class="movie-card">
+                <div class="movie-image-container">
+                    <img th:src="${rightMovie.imageUrl}" class="movie-image" th:alt="${rightMovie.title}">
+                </div>
+                <div class="movie-info">
+                    <div class="movie-title" th:text="${rightMovie.title}">Movie Title</div>
+                    <div class="movie-details">
+                        <div class="movie-genre">
+                            <span th:text="${rightMovie.genre}">Genre</span> · 
+                            <span th:text="${rightMovie.rating} + '/10'">Rating</span>
+                        </div>
+                        <div class="movie-description" th:text="${rightMovie.description}">Description goes here...</div>
+                    </div>
+                    <form action="/choose" method="post">
+                        <input type="hidden" name="chosenId" th:value="${rightMovie.id}">
+                        <input type="hidden" name="platform" th:value="${platform}">
+                        <input type="hidden" name="round" th:value="${round}">
+                        <button type="submit" class="choose-button">Choose This</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Skip Both Button -->
+        <form action="/skip" method="get">
+            <input type="hidden" name="platform" th:value="${platform}">
+            <input type="hidden" name="round" th:value="${round}">
+            <button type="submit" class="skip-button">Skip Both</button>
+        </form>
+        
+        <a href="/" class="cancel-link">Cancel</a>
+    </div>
+    
+    <footer>
+        <p>© 2025 Movie Matcher. All rights reserved.</p>
+    </footer>
+</body>
+</html>

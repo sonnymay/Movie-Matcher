@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error - Movie Matcher</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+
+<body>
+    <header>
+        <div class="container">
+            <h1>Movie Matcher</h1>
+            <nav>
+                <ul>
+                    <li><a href="/">Home</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container error-container">
+        <div class="error-card">
+            <h2>Oops! Something went wrong</h2>
+
+            <div th:if="${errorMessage}" class="error-message">
+                <p th:text="${errorMessage}">An error occurred.</p>
+            </div>
+            <div th:unless="${errorMessage}" class="error-message">
+                <p>We're sorry, but something unexpected happened. Please try again later.</p>
+            </div>
+
+            <div class="error-actions">
+                <a href="/" class="button primary-button">Return to Home</a>
+                <a href="javascript:history.back()" class="button secondary-button">Go Back</a>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2023 Movie Matcher</p>
+        </div>
+    </footer>
+</body>
+
+</html>

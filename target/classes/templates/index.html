@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Matcher - Find Your Perfect Watch</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #e50914;
+            --secondary-color: #0071eb;
+            --dark-bg: #141414;
+            --light-bg: #f5f5f5;
+            --card-bg: #222;
+            --text-light: #fff;
+            --text-dark: #333;
+        }
+        
+        body {
+            background-color: var(--dark-bg);
+            color: var(--text-light);
+            font-family: 'Arial', sans-serif;
+        }
+        
+        .navbar-brand {
+            color: var(--primary-color);
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+        
+        .jumbotron {
+            background-color: rgba(0,0,0,0.7);
+            padding: 3rem;
+            margin-bottom: 2rem;
+            border-radius: 0.5rem;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .btn-primary:hover {
+            background-color: #c50812;
+            border-color: #c50812;
+        }
+        
+        .btn-secondary {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+        
+        .card {
+            background-color: var(--card-bg);
+            color: var(--text-light);
+            margin-bottom: 1.5rem;
+            transition: transform 0.3s ease;
+            height: 100%;
+        }
+        
+        .card:hover {
+            transform: scale(1.03);
+        }
+        
+        .card-img-top {
+            height: 300px;
+            object-fit: cover;
+        }
+        
+        .section-title {
+            border-left: 4px solid var(--primary-color);
+            padding-left: 1rem;
+            margin: 2rem 0;
+        }
+        
+        .platform-selector {
+            background-color: rgba(0,0,0,0.5);
+            padding: 2rem;
+            border-radius: 0.5rem;
+            margin: 2rem 0;
+        }
+        
+        footer {
+            margin-top: 3rem;
+            padding: 2rem;
+            background-color: rgba(0,0,0,0.8);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #000;">
+        <div class="container">
+            <a class="navbar-brand" href="/">Movie Matcher</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/match?platform=All">Match Movies</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <div class="container mt-4">
+        <div class="jumbotron">
+            <h1 class="display-4">Find Perfect Movie & TV Show Recommendations</h1>
+            <p class="lead">Movie Matcher helps you and your friends find movies and TV shows you'll both enjoy.</p>
+            <p>No more endless scrolling or indecision. Just pick left or right, and we'll find your perfect match!</p>
+            <a href="/match?platform=All" class="btn btn-primary btn-lg">Get Started</a>
+        </div>
+        
+        <!-- Platform Selector -->
+        <div class="platform-selector">
+            <h3 class="mb-3">Choose your streaming platform:</h3>
+            <div class="row">
+                <div class="col-md-6 col-lg-3 mb-3">
+                    <a href="/match?platform=Netflix" class="btn btn-outline-danger w-100">Netflix</a>
+                </div>
+                <div class="col-md-6 col-lg-3 mb-3">
+                    <a href="/match?platform=Max" class="btn btn-outline-info w-100">Max</a>
+                </div>
+                <div class="col-md-6 col-lg-3 mb-3">
+                    <a href="/match?platform=Prime" class="btn btn-outline-warning w-100">Prime</a>
+                </div>
+                <div class="col-md-6 col-lg-3 mb-3">
+                    <a href="/match?platform=All" class="btn btn-outline-light w-100">All Platforms</a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Popular Movies Section -->
+        <h2 class="section-title">Popular Movies</h2>
+        <div class="row">
+            <div th:each="movie : ${popularMovies}" class="col-md-6 col-lg-3">
+                <div class="card">
+                    <img th:src="${movie.imageUrl}" class="card-img-top" th:alt="${movie.title}">
+                    <div class="card-body">
+                        <h5 class="card-title" th:text="${movie.title}">Movie Title</h5>
+                        <p class="card-text" th:text="${movie.description}">Description</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="badge bg-primary" th:text="${movie.genre}">Genre</span>
+                            <span class="badge bg-secondary" th:text="${movie.rating} + '/10'">Rating</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Popular TV Shows Section -->
+        <h2 class="section-title">Popular TV Shows</h2>
+        <div class="row">
+            <div th:each="show : ${popularTvShows}" class="col-md-6 col-lg-3">
+                <div class="card">
+                    <img th:src="${show.imageUrl}" class="card-img-top" th:alt="${show.title}">
+                    <div class="card-body">
+                        <h5 class="card-title" th:text="${show.title}">Show Title</h5>
+                        <p class="card-text" th:text="${show.description}">Description</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="badge bg-primary" th:text="${show.genre}">Genre</span>
+                            <span class="badge bg-secondary" th:text="${show.rating} + '/10'">Rating</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Footer -->
+    <footer class="text-center">
+        <p>© 2025 Movie Matcher. All rights reserved.</p>
+        <p>Created with Spring Boot, TMDB API, and ❤️</p>
+    </footer>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

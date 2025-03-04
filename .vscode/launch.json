@@ -1,0 +1,15 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "Movie Matcher",
+      "request": "launch",
+      "mainClass": "com.yourname.moviematcher.MoviematcherApplication",
+      "projectName": "moviematcher",
+      "env": {
+        "TMDB_API_KEY": "6f756c7ebd790cd7fc5ce9cdb0869d7a"
+      }
+    }
+  ]
+}

@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Matcher - Your Perfect Match</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary-color: #e50914;
+            --secondary-color: #0071eb;
+            --dark-bg: #141414;
+            --light-bg: #f5f5f5;
+            --card-bg: #222;
+            --text-light: #fff;
+            --text-dark: #333;
+        }
+        
+        body {
+            background-color: var(--dark-bg);
+            color: var(--text-light);
+            font-family: 'Arial', sans-serif;
+        }
+        
+        .navbar-brand {
+            color: var(--primary-color);
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+        
+        .recommendation-container {
+            background-color: rgba(0,0,0,0.7);
+            border-radius: 10px;
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+        
+        .movie-header {
+            text-align: center;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .movie-image {
+            height: 400px;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .movie-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .movie-details {
+            padding: 1rem;
+        }
+        
+        .detail-item {
+            margin-bottom: 1rem;
+        }
+        
+        .detail-icon {
+            background-color: var(--secondary-color);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .btn-primary:hover {
+            background-color: #c50812;
+            border-color: #c50812;
+        }
+        
+        .btn-secondary {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+        
+        .celebration {
+            font-size: 2rem;
+            color: gold;
+            margin-bottom: 1rem;
+        }
+        
+        footer {
+            margin-top: 3rem;
+            padding: 2rem;
+            background-color: rgba(0,0,0,0.8);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #000;">
+        <div class="container">
+            <a class="navbar-brand" href="/">Movie Matcher</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/match?platform=All">Match Movies</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="movie-header">
+            <div class="celebration">
+                <i class="bi bi-stars"></i> <i class="bi bi-trophy-fill"></i> <i class="bi bi-stars"></i>
+            </div>
+            <h1>We Found Your Perfect Match!</h1>
+            <p class="lead">Based on your choices, we recommend:</p>
+        </div>
+        
+        <div class="recommendation-container">
+            <div class="row">
+                <div class="col-md-5">
+                    <div class="movie-image">
+                        <img th:src="${movie.imageUrl}" th:alt="${movie.title}">
+                    </div>
+                </div>
+                <div class="col-md-7">
+                    <div class="movie-details">
+                        <h2 th:text="${movie.title}" class="mb-4">Movie Title</h2>
+                        
+                        <div class="detail-item d-flex align-items-center">
+                            <div class="detail-icon">
+                                <i class="bi bi-film"></i>
+                            </div>
+                            <div>
+                                <h5>Genre</h5>
+                                <p th:text="${movie.genre}">Action</p>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-item d-flex align-items-center">
+                            <div class="detail-icon">
+                                <i class="bi bi-star-fill"></i>
+                            </div>
+                            <div>
+                                <h5>Rating</h5>
+                                <p th:text="${movie.rating} + '/10'">8.5/10</p>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-item d-flex align-items-center">
+                            <div class="detail-icon">
+                                <i class="bi bi-collection-play"></i>
+                            </div>
+                            <div>
+                                <h5>Available On</h5>
+                                <p th:text="${#strings.listJoin(movie.platforms, ', ')}">Netflix, Prime</p>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-item">
+                            <h5>Description</h5>
+                            <p th:text="${movie.description}">Movie description goes here...</p>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <a href="/continue" class="btn btn-secondary me-2">Find Another Match</a>
+                            <a href="/" class="btn btn-primary">Back to Home</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Footer -->
+    <footer class="text-center">
+        <p>© 2025 Movie Matcher. All rights reserved.</p>
+        <p>Created with Spring Boot, TMDB API, and ❤️</p>
+    </footer>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

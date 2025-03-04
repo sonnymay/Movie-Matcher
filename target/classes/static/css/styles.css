@@ -1,0 +1,276 @@
+/* Base styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  line-height: 1.6;
+  color: #333;
+  background-color: #f9f9f9;
+}
+
+header {
+  background-color: #0d253f;
+  color: white;
+  padding: 1rem;
+  text-align: center;
+}
+
+nav ul {
+  list-style: none;
+  display: flex;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+nav ul li {
+  margin: 0 1rem;
+}
+
+nav ul li a {
+  color: white;
+  text-decoration: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+}
+
+nav ul li a:hover,
+nav ul li a.active {
+  background-color: #01b4e4;
+}
+
+main {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+footer {
+  text-align: center;
+  padding: 2rem;
+  background-color: #0d253f;
+  color: white;
+  margin-top: 2rem;
+}
+
+/* Home page styles */
+.intro {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.intro h2 {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+.intro p {
+  font-size: 1.2rem;
+  margin-bottom: 1.5rem;
+}
+
+.btn {
+  display: inline-block;
+  background-color: #01b4e4;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  text-decoration: none;
+  font-weight: bold;
+  transition: background-color 0.3s;
+  border: none;
+  cursor: pointer;
+}
+
+.btn:hover {
+  background-color: #0d8bbb;
+}
+
+/* Movie grid styles */
+.movie-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 2rem;
+}
+
+.movie-card {
+  background-color: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s;
+}
+
+.movie-card:hover {
+  transform: translateY(-5px);
+}
+
+.movie-card img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.movie-card h3 {
+  padding: 1rem;
+  font-size: 1.1rem;
+}
+
+.movie-rating {
+  padding: 0 1rem 1rem;
+  color: #01b4e4;
+  font-weight: bold;
+}
+
+.movie-overview {
+  padding: 0 1rem 1rem;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+/* Match page styles */
+.match-section {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.match-section h2 {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.match-section p {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.movie-selectors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.selector {
+  flex: 1;
+  min-width: 250px;
+}
+
+.selector label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: bold;
+}
+
+.selector select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+/* Recommendation page styles */
+.recommendations {
+  text-align: center;
+}
+
+.selected-movies {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 2rem 0;
+}
+
+.plus-sign {
+  font-size: 2rem;
+  margin: 0 2rem;
+}
+
+.recommendations h3 {
+  margin: 2rem 0 1rem;
+  font-size: 1.5rem;
+}
+
+/* Error page styles */
+.error-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 70vh;
+  padding: 2rem;
+}
+
+.error-card {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+  max-width: 600px;
+  width: 100%;
+  text-align: center;
+}
+
+.error-card h2 {
+  color: #e63946;
+  margin-bottom: 1.5rem;
+}
+
+.error-message {
+  background-color: #f8d7da;
+  border: 1px solid #f5c2c7;
+  border-radius: 4px;
+  color: #842029;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+}
+
+.error-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.button {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  text-decoration: none;
+  font-weight: bold;
+  transition: background-color 0.3s ease;
+}
+
+.primary-button {
+  background-color: #457b9d;
+  color: white;
+}
+
+.primary-button:hover {
+  background-color: #1d3557;
+}
+
+.secondary-button {
+  background-color: #e9ecef;
+  color: #212529;
+}
+
+.secondary-button:hover {
+  background-color: #dee2e6;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .movie-selectors {
+    flex-direction: column;
+  }
+
+  .movie-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+}

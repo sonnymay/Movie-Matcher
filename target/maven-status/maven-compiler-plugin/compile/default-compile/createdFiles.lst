@@ -1,0 +1,7 @@
+com/yourname/moviematcher/MoviematcherApplication.class
+com/yourname/moviematcher/service/MovieServiceImpl.class
+com/yourname/moviematcher/config/CacheConfig.class
+com/yourname/moviematcher/service/MovieAPIClient.class
+com/yourname/moviematcher/controller/MovieController.class
+com/yourname/moviematcher/model/Movie.class
+com/yourname/moviematcher/service/MovieService.class
