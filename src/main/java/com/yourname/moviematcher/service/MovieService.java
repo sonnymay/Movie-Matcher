@@ -41,6 +41,11 @@ public interface MovieService {
     void recordChoice(String chosenId);
     
     /**
+     * Skips both movies in the current pair
+     */
+    void skipCurrentPair(String leftId, String rightId);
+    
+    /**
      * Gets the final recommendation based on user choices
      */
     Movie getFinalRecommendation();

@@ -6,6 +6,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -17,6 +18,7 @@ import com.yourname.moviematcher.model.Movie;
 
 /**
  * Client for accessing The Movie Database (TMDB) API
+ * with improved filtering and recommendation quality
  */
 @Component
 public class MovieAPIClient {
@@ -27,6 +29,11 @@ public class MovieAPIClient {
     private final HttpClient httpClient;
     private final String BASE_URL = "https://api.themoviedb.org/3";
     private final Map<Integer, String> genreMap;
+    
+    // Quality thresholds
+    private static final double MIN_RATING = 6.0;
+    private static final int MIN_VOTES = 200;
+    private static final int RESULTS_PER_PAGE = 3; // Pages to fetch for more variety
     
     public MovieAPIClient() {
         this.httpClient = HttpClient.newBuilder()
@@ -75,30 +82,60 @@ public class MovieAPIClient {
     }
     
     /**
-     * Gets popular movies from TMDB API
+     * Gets popular movies from TMDB API with quality filters
      */
     @Cacheable("popularMovies")
     public List<Movie> getPopularMovies() {
+        List<Movie> movies = new ArrayList<>();
+        
         try {
-            String url = BASE_URL + "/movie/popular?api_key=" + apiKey;
+            // Fetch multiple pages for more variety
+            for (int page = 1; page <= RESULTS_PER_PAGE; page++) {
+                String url = BASE_URL + "/movie/popular?api_key=" + apiKey + "&page=" + page;
+                
+                HttpRequest request = HttpRequest.newBuilder()
+                        .uri(URI.create(url))
+                        .GET()
+                        .build();
+                        
+                HttpResponse<String> response = httpClient.send(request, 
+                        HttpResponse.BodyHandlers.ofString());
+                
+                if (response.statusCode() != 200) {
+                    System.err.println("API request failed: " + response.statusCode());
+                    continue;
+                }
+                
+                JSONObject jsonResponse = new JSONObject(response.body());
+                JSONArray results = jsonResponse.getJSONArray("results");
+                
+                movies.addAll(parseMovieList(results));
+            }
             
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(url))
+            // Fetch top-rated movies as well for better quality
+            String topRatedUrl = BASE_URL + "/movie/top_rated?api_key=" + apiKey;
+            
+            HttpRequest topRatedRequest = HttpRequest.newBuilder()
+                    .uri(URI.create(topRatedUrl))
                     .GET()
                     .build();
                     
-            HttpResponse<String> response = httpClient.send(request, 
+            HttpResponse<String> topRatedResponse = httpClient.send(topRatedRequest, 
                     HttpResponse.BodyHandlers.ofString());
             
-            if (response.statusCode() != 200) {
-                System.err.println("API request failed: " + response.statusCode());
-                return new ArrayList<>();
+            if (topRatedResponse.statusCode() == 200) {
+                JSONObject jsonResponse = new JSONObject(topRatedResponse.body());
+                JSONArray results = jsonResponse.getJSONArray("results");
+                
+                movies.addAll(parseMovieList(results));
             }
             
-            JSONObject jsonResponse = new JSONObject(response.body());
-            JSONArray results = jsonResponse.getJSONArray("results");
-            
-            return parseMovieList(results);
+            // Filter by quality thresholds and remove duplicates
+            return movies.stream()
+                    .filter(movie -> movie.getRating() >= MIN_RATING)
+                    .distinct() // Remove duplicates
+                    .collect(Collectors.toList());
+                    
         } catch (Exception e) {
             System.err.println("Error fetching popular movies: " + e.getMessage());
             e.printStackTrace();
@@ -107,29 +144,59 @@ public class MovieAPIClient {
     }
     
     /**
-     * Gets popular TV shows from TMDB API
+     * Gets popular TV shows from TMDB API with quality filters
      */
     @Cacheable("popularTvShows")
     public List<Movie> getPopularTvShows() {
+        List<Movie> shows = new ArrayList<>();
+        
         try {
-            String url = BASE_URL + "/tv/popular?api_key=" + apiKey;
+            // Fetch multiple pages for more variety
+            for (int page = 1; page <= RESULTS_PER_PAGE; page++) {
+                String url = BASE_URL + "/tv/popular?api_key=" + apiKey + "&page=" + page;
+                
+                HttpRequest request = HttpRequest.newBuilder()
+                        .uri(URI.create(url))
+                        .GET()
+                        .build();
+                        
+                HttpResponse<String> response = httpClient.send(request, 
+                        HttpResponse.BodyHandlers.ofString());
+                
+                if (response.statusCode() != 200) {
+                    continue;
+                }
+                
+                JSONObject jsonResponse = new JSONObject(response.body());
+                JSONArray results = jsonResponse.getJSONArray("results");
+                
+                shows.addAll(parseTvShowList(results));
+            }
             
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(url))
+            // Fetch top-rated TV shows as well for better quality
+            String topRatedUrl = BASE_URL + "/tv/top_rated?api_key=" + apiKey;
+            
+            HttpRequest topRatedRequest = HttpRequest.newBuilder()
+                    .uri(URI.create(topRatedUrl))
                     .GET()
                     .build();
                     
-            HttpResponse<String> response = httpClient.send(request, 
+            HttpResponse<String> topRatedResponse = httpClient.send(topRatedRequest, 
                     HttpResponse.BodyHandlers.ofString());
             
-            if (response.statusCode() != 200) {
-                return new ArrayList<>();
+            if (topRatedResponse.statusCode() == 200) {
+                JSONObject jsonResponse = new JSONObject(topRatedResponse.body());
+                JSONArray results = jsonResponse.getJSONArray("results");
+                
+                shows.addAll(parseTvShowList(results));
             }
             
-            JSONObject jsonResponse = new JSONObject(response.body());
-            JSONArray results = jsonResponse.getJSONArray("results");
-            
-            return parseTvShowList(results);
+            // Filter by quality thresholds and remove duplicates
+            return shows.stream()
+                    .filter(show -> show.getRating() >= MIN_RATING)
+                    .distinct() // Remove duplicates
+                    .collect(Collectors.toList());
+                    
         } catch (Exception e) {
             System.err.println("Error fetching popular TV shows: " + e.getMessage());
             return new ArrayList<>();
@@ -137,7 +204,7 @@ public class MovieAPIClient {
     }
     
     /**
-     * Gets movie details by ID
+     * Gets movie details by ID with more detail
      */
     @Cacheable("movieDetails")
     public Movie getMovieDetails(String id) {
@@ -146,7 +213,7 @@ public class MovieAPIClient {
             int idNum = Integer.parseInt(id);
             
             // First try as movie
-            String url = BASE_URL + "/movie/" + id + "?api_key=" + apiKey;
+            String url = BASE_URL + "/movie/" + id + "?api_key=" + apiKey + "&append_to_response=credits,watch/providers";
             
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(url))
@@ -158,11 +225,11 @@ public class MovieAPIClient {
             
             if (response.statusCode() == 200) {
                 JSONObject details = new JSONObject(response.body());
-                return parseMovieDetails(details);
+                return parseMovieDetailsFull(details);
             }
             
             // If movie fails, try as TV show
-            url = BASE_URL + "/tv/" + id + "?api_key=" + apiKey;
+            url = BASE_URL + "/tv/" + id + "?api_key=" + apiKey + "&append_to_response=credits,watch/providers";
             
             request = HttpRequest.newBuilder()
                     .uri(URI.create(url))
@@ -174,7 +241,7 @@ public class MovieAPIClient {
                     
             if (response.statusCode() == 200) {
                 JSONObject details = new JSONObject(response.body());
-                return parseTvDetails(details);
+                return parseTvDetailsFull(details);
             }
             
             return createDefaultMovie(id);
@@ -185,14 +252,15 @@ public class MovieAPIClient {
     }
     
     /**
-     * Gets similar movies/shows to the given one
+     * Gets similar movies/shows to the given one with improved quality
      */
     @Cacheable("recommendations")
     public List<Movie> getRecommendations(String id) {
+        List<Movie> allRecs = new ArrayList<>();
+        
         try {
-            // First try as movie
+            // Try recommendations for movie
             String url = BASE_URL + "/movie/" + id + "/recommendations?api_key=" + apiKey;
-            
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(url))
                     .GET()
@@ -204,12 +272,27 @@ public class MovieAPIClient {
             if (response.statusCode() == 200) {
                 JSONObject jsonResponse = new JSONObject(response.body());
                 JSONArray results = jsonResponse.getJSONArray("results");
-                return parseMovieList(results);
+                allRecs.addAll(parseMovieList(results));
             }
             
-            // If movie fails, try as TV show
-            url = BASE_URL + "/tv/" + id + "/recommendations?api_key=" + apiKey;
+            // Try similar movies
+            url = BASE_URL + "/movie/" + id + "/similar?api_key=" + apiKey;
+            request = HttpRequest.newBuilder()
+                    .uri(URI.create(url))
+                    .GET()
+                    .build();
+                    
+            response = httpClient.send(request, 
+                    HttpResponse.BodyHandlers.ofString());
             
+            if (response.statusCode() == 200) {
+                JSONObject jsonResponse = new JSONObject(response.body());
+                JSONArray results = jsonResponse.getJSONArray("results");
+                allRecs.addAll(parseMovieList(results));
+            }
+            
+            // Try as TV show recommendations
+            url = BASE_URL + "/tv/" + id + "/recommendations?api_key=" + apiKey;
             request = HttpRequest.newBuilder()
                     .uri(URI.create(url))
                     .GET()
@@ -221,10 +304,31 @@ public class MovieAPIClient {
             if (response.statusCode() == 200) {
                 JSONObject jsonResponse = new JSONObject(response.body());
                 JSONArray results = jsonResponse.getJSONArray("results");
-                return parseTvShowList(results);
+                allRecs.addAll(parseTvShowList(results));
             }
             
-            return new ArrayList<>();
+            // Try similar TV shows
+            url = BASE_URL + "/tv/" + id + "/similar?api_key=" + apiKey;
+            request = HttpRequest.newBuilder()
+                    .uri(URI.create(url))
+                    .GET()
+                    .build();
+                    
+            response = httpClient.send(request, 
+                    HttpResponse.BodyHandlers.ofString());
+                    
+            if (response.statusCode() == 200) {
+                JSONObject jsonResponse = new JSONObject(response.body());
+                JSONArray results = jsonResponse.getJSONArray("results");
+                allRecs.addAll(parseTvShowList(results));
+            }
+            
+            // Apply quality filters and remove duplicates
+            return allRecs.stream()
+                    .filter(movie -> movie.getRating() >= MIN_RATING)
+                    .distinct()
+                    .collect(Collectors.toList());
+                    
         } catch (Exception e) {
             System.err.println("Error fetching recommendations: " + e.getMessage());
             return new ArrayList<>();
@@ -232,25 +336,82 @@ public class MovieAPIClient {
     }
     
     /**
-     * Gets content filtered by platform
+     * Gets content filtered by platform and genre with quality filters
      */
     public List<Movie> getContentByPlatform(String platform) {
-        // For simplicity in this first version, just return all content
         List<Movie> allContent = new ArrayList<>();
         allContent.addAll(getPopularMovies());
         allContent.addAll(getPopularTvShows());
+        
+        // Filter by platform if needed - for now just return all
+        // In a future version, we could use the watch/providers API
         
         return allContent;
     }
     
     /**
-     * Parses movie list from JSON response
+     * Gets movies filtered by genre
+     */
+    public List<Movie> getMoviesByGenre(String genreName) {
+        try {
+            // Find genre ID from our map
+            Integer genreId = null;
+            for (Map.Entry<Integer, String> entry : genreMap.entrySet()) {
+                if (entry.getValue().equalsIgnoreCase(genreName)) {
+                    genreId = entry.getKey();
+                    break;
+                }
+            }
+            
+            if (genreId == null) {
+                return new ArrayList<>();
+            }
+            
+            // Fetch movies by genre
+            String url = BASE_URL + "/discover/movie?api_key=" + apiKey + 
+                    "&with_genres=" + genreId + 
+                    "&vote_average.gte=" + MIN_RATING +
+                    "&vote_count.gte=" + MIN_VOTES;
+            
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(url))
+                    .GET()
+                    .build();
+                    
+            HttpResponse<String> response = httpClient.send(request, 
+                    HttpResponse.BodyHandlers.ofString());
+            
+            if (response.statusCode() != 200) {
+                return new ArrayList<>();
+            }
+            
+            JSONObject jsonResponse = new JSONObject(response.body());
+            JSONArray results = jsonResponse.getJSONArray("results");
+            
+            return parseMovieList(results);
+            
+        } catch (Exception e) {
+            System.err.println("Error fetching genre movies: " + e.getMessage());
+            return new ArrayList<>();
+        }
+    }
+    
+    /**
+     * Parses movie list from JSON response with vote count filter
      */
     private List<Movie> parseMovieList(JSONArray results) {
         List<Movie> movies = new ArrayList<>();
         
         for (int i = 0; i < results.length(); i++) {
             JSONObject movieJson = results.getJSONObject(i);
+            
+            // Check vote count (if available) - skip movies with too few votes
+            if (movieJson.has("vote_count")) {
+                int voteCount = movieJson.getInt("vote_count");
+                if (voteCount < MIN_VOTES) {
+                    continue;
+                }
+            }
             
             // Convert numeric ID to string
             String id = String.valueOf(movieJson.getInt("id"));
@@ -272,7 +433,7 @@ public class MovieAPIClient {
                 }
             }
             
-            // Build image URL
+            // Build image URL - use higher quality if available
             String posterPath = movieJson.optString("poster_path", null);
             String imageUrl = posterPath != null ? 
                     "https://image.tmdb.org/t/p/w500" + posterPath : 
@@ -307,13 +468,21 @@ public class MovieAPIClient {
     }
     
     /**
-     * Parses TV show list from JSON response
+     * Parses TV show list from JSON response with vote count filter
      */
     private List<Movie> parseTvShowList(JSONArray results) {
         List<Movie> shows = new ArrayList<>();
         
         for (int i = 0; i < results.length(); i++) {
             JSONObject showJson = results.getJSONObject(i);
+            
+            // Check vote count (if available) - skip shows with too few votes
+            if (showJson.has("vote_count")) {
+                int voteCount = showJson.getInt("vote_count");
+                if (voteCount < MIN_VOTES) {
+                    continue;
+                }
+            }
             
             // Convert numeric ID to string
             String id = String.valueOf(showJson.getInt("id"));
@@ -370,9 +539,9 @@ public class MovieAPIClient {
     }
     
     /**
-     * Parse movie details from JSON response
+     * Parse movie details from JSON response with more detailed information
      */
-    private Movie parseMovieDetails(JSONObject details) {
+    private Movie parseMovieDetailsFull(JSONObject details) {
         String id = String.valueOf(details.getInt("id"));
         String title = details.getString("title");
         
@@ -381,7 +550,7 @@ public class MovieAPIClient {
             overview = "No description available.";
         }
         
-        // Build image URL
+        // Build image URL - use higher quality if available
         String posterPath = details.optString("poster_path", null);
         String imageUrl = posterPath != null ? 
                 "https://image.tmdb.org/t/p/w500" + posterPath : 
@@ -408,8 +577,28 @@ public class MovieAPIClient {
         double rating = details.has("vote_average") ? 
                 details.getDouble("vote_average") : 0;
         
-        // For now, use placeholder provider
+        // Get streaming providers if available
         String platforms = "Unknown";
+        if (details.has("watch/providers") && !details.isNull("watch/providers")) {
+            JSONObject providers = details.getJSONObject("watch/providers");
+            if (providers.has("results") && providers.getJSONObject("results").has("US")) {
+                JSONObject usProviders = providers.getJSONObject("results").getJSONObject("US");
+                
+                if (usProviders.has("flatrate")) {
+                    JSONArray flatrateProviders = usProviders.getJSONArray("flatrate");
+                    List<String> providerNames = new ArrayList<>();
+                    
+                    for (int i = 0; i < flatrateProviders.length(); i++) {
+                        JSONObject provider = flatrateProviders.getJSONObject(i);
+                        providerNames.add(provider.getString("provider_name"));
+                    }
+                    
+                    if (!providerNames.isEmpty()) {
+                        platforms = String.join(", ", providerNames);
+                    }
+                }
+            }
+        }
         
         Movie movie = new Movie(id, title, overview, imageUrl, platforms, primaryGenre, rating);
         movie.setGenres(genres);
@@ -418,9 +607,9 @@ public class MovieAPIClient {
     }
     
     /**
-     * Parse TV show details from JSON response
+     * Parse TV show details from JSON response with more detailed information
      */
-    private Movie parseTvDetails(JSONObject details) {
+    private Movie parseTvDetailsFull(JSONObject details) {
         String id = String.valueOf(details.getInt("id"));
         String title = details.getString("name");
         
@@ -456,8 +645,28 @@ public class MovieAPIClient {
         double rating = details.has("vote_average") ? 
                 details.getDouble("vote_average") : 0;
         
-        // For now, use placeholder provider
+        // Get streaming providers if available
         String platforms = "Unknown";
+        if (details.has("watch/providers") && !details.isNull("watch/providers")) {
+            JSONObject providers = details.getJSONObject("watch/providers");
+            if (providers.has("results") && providers.getJSONObject("results").has("US")) {
+                JSONObject usProviders = providers.getJSONObject("results").getJSONObject("US");
+                
+                if (usProviders.has("flatrate")) {
+                    JSONArray flatrateProviders = usProviders.getJSONArray("flatrate");
+                    List<String> providerNames = new ArrayList<>();
+                    
+                    for (int i = 0; i < flatrateProviders.length(); i++) {
+                        JSONObject provider = flatrateProviders.getJSONObject(i);
+                        providerNames.add(provider.getString("provider_name"));
+                    }
+                    
+                    if (!providerNames.isEmpty()) {
+                        platforms = String.join(", ", providerNames);
+                    }
+                }
+            }
+        }
         
         Movie show = new Movie(id, title, overview, imageUrl, platforms, primaryGenre, rating);
         show.setGenres(genres);
